@@ -186,8 +186,9 @@
       padding: 0.25rem 1rem; border-radius: 50px; white-space: nowrap;
     }
     .paket-name { font-size: 0.85rem; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.5rem; }
-    .paket-price { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .paket-price { font-size: 3.2rem; font-weight: 800; margin-bottom: 0.1rem; line-height: 1.1; }
     .paket-price span { font-size: 1rem; font-weight: 400; color: var(--grey); }
+    .paket-save { color: #00e676; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.3rem; min-height: 1.2em; }
     .paket-setup { color: var(--grey); font-size: 0.85rem; margin-bottom: 1.5rem; }
     .paket-features { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2rem; }
     .paket-features li { display: flex; gap: 0.6rem; font-size: 0.95rem; color: var(--grey); }
@@ -206,6 +207,23 @@
       color: var(--white);
     }
     .paket-btn-filled:hover { opacity: 0.85; }
+
+    /* LAUFZEIT TOGGLE */
+    .laufzeit-toggle {
+      display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .laufzeit-btn {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--grey); padding: 0.55rem 1.3rem; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .laufzeit-btn:hover { border-color: var(--accent); color: var(--white); }
+    .laufzeit-btn.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-color: transparent; color: var(--white);
+    }
 
     /* DATENSCHUTZ */
     .datenschutz-grid {
@@ -377,12 +395,21 @@
   <div class="container">
     <div class="section-label">Pakete & Preise</div>
     <h2 class="section-title">Transparent. Fair. Ohne Überraschungen.</h2>
-    <p class="section-sub">Monatlich kündbar. Einrichtungsgebühr einmalig. Alle Pakete inkl. kostenlosem Probemonat.</p>
+    <p class="section-sub">Einrichtungsgebühr einmalig. Alle Pakete inkl. kostenlosem Probemonat. Längere Laufzeit = besserer Preis.</p>
+
+    <div class="laufzeit-toggle">
+      <button class="laufzeit-btn active" data-months="1">1 Monat</button>
+      <button class="laufzeit-btn" data-months="3">3 Monate</button>
+      <button class="laufzeit-btn" data-months="6">6 Monate</button>
+      <button class="laufzeit-btn" data-months="12">12 Monate</button>
+    </div>
+
     <div class="pakete-grid">
 
-      <div class="paket-card">
+      <div class="paket-card" data-paket="starter">
         <div class="paket-name">Starter</div>
-        <div class="paket-price">200€ <span>/ Monat</span></div>
+        <div class="paket-price"><span class="price-value">200€</span> <span>/ Monat</span></div>
+        <div class="paket-save">&nbsp;</div>
         <div class="paket-setup">Einrichtung: 299€ einmalig</div>
         <ul class="paket-features">
           <li>1 KI-Automatisierung (WhatsApp oder E-Mail)</li>
@@ -394,10 +421,11 @@
         <a href="#kontakt" class="paket-btn paket-btn-outline">Jetzt starten</a>
       </div>
 
-      <div class="paket-card featured">
+      <div class="paket-card featured" data-paket="business">
         <div class="featured-badge">⭐ Beliebteste Wahl</div>
         <div class="paket-name">Business</div>
-        <div class="paket-price">350€ <span>/ Monat</span></div>
+        <div class="paket-price"><span class="price-value">350€</span> <span>/ Monat</span></div>
+        <div class="paket-save">&nbsp;</div>
         <div class="paket-setup">Einrichtung: 499€ einmalig</div>
         <ul class="paket-features">
           <li>3 KI-Automatisierungen</li>
@@ -411,9 +439,10 @@
         <a href="#kontakt" class="paket-btn paket-btn-filled">Jetzt starten</a>
       </div>
 
-      <div class="paket-card">
+      <div class="paket-card" data-paket="premium">
         <div class="paket-name">Premium</div>
-        <div class="paket-price">599€ <span>/ Monat</span></div>
+        <div class="paket-price"><span class="price-value">599€</span> <span>/ Monat</span></div>
+        <div class="paket-save">&nbsp;</div>
         <div class="paket-setup">Einrichtung: 899€ einmalig</div>
         <ul class="paket-features">
           <li>Unbegrenzte Automatisierungen</li>
@@ -489,6 +518,36 @@
 </footer>
 
 <script>
+  // PRICING TOGGLE
+  const pricing = {
+    starter:  { 1: 200, 3: 179, 6: 159, 12: 139 },
+    business: { 1: 350, 3: 319, 6: 279, 12: 249 },
+    premium:  { 1: 599, 3: 539, 6: 479, 12: 419 }
+  };
+  const basePrice = { starter: 200, business: 350, premium: 599 };
+
+  document.querySelectorAll('.laufzeit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.laufzeit-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const months = parseInt(btn.dataset.months);
+      document.querySelectorAll('.paket-card').forEach(card => {
+        const paket = card.dataset.paket;
+        if (!paket) return;
+        const price = pricing[paket][months];
+        const base = basePrice[paket];
+        const pct = Math.round((1 - price / base) * 100);
+        card.querySelector('.price-value').textContent = price + '\u20ac';
+        const saveEl = card.querySelector('.paket-save');
+        if (months > 1) {
+          saveEl.textContent = pct + '% g\u00fcnstiger als Monatspaket';
+        } else {
+          saveEl.innerHTML = '&nbsp;';
+        }
+      });
+    });
+  });
+
   // Neural network canvas animation
   const canvas = document.getElementById('neural');
   const ctx = canvas.getContext('2d');
